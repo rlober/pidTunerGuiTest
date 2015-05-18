@@ -6,7 +6,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
+greaterThan(QT_MAJOR_VERSION, 5): QT += widgets printsupport
 
 TARGET = pidTunerGuiTest
 TEMPLATE = app
@@ -14,11 +14,9 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    qcustomplot.cpp \
-    testclass.cpp
+    qcustomplot.cpp
 
 HEADERS  += mainwindow.h \
-    qcustomplot.h \
-    testclass.h
+    qcustomplot.h
 
 FORMS    += mainwindow.ui

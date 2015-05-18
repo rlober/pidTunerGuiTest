@@ -1,10 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-//Foo *fooObject_,
+#include <QMessageBox>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)//,
-    //fooObject(fooObject_)
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     createPlot();
@@ -12,11 +12,43 @@ MainWindow::MainWindow(QWidget *parent) :
     controlType = "position";
     yPlotLabel = "y";
     isOnlyMajorJoints = true;
+
+    initializeGui();
+
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::setCurrentPartAndJoint()
+{
+    ui->partList->setCurrentIndex(partIndex);
+    ui->jointList->setCurrentIndex(jointIndex);
+}
+
+void MainWindow::initializeGui()
+{
+    jointIndex = 0;
+    partIndex = 0;
+    setCurrentPartAndJoint();
+
+    jointIndex = 1;
+    partIndex = 1;
+    setCurrentPartAndJoint();
+
+    partIndex=ui->partList->count()-1;
+    ui->partList->setCurrentIndex(partIndex);
+    jointIndex = ui->jointList->count()-1;
+    setCurrentPartAndJoint();
+
+    gainsHaveBeenChanged = false;
+    ui->posContButton->setChecked(true);
+    ui->statusInfoLabel->setText("ready");
+
+
 }
 
 
@@ -58,6 +90,7 @@ void MainWindow::addPartsToList()
 
 void MainWindow::on_gainTestButton_clicked()
 {
+
     // generate some data:
     QVector<double> x(101), y(101); // initialize with entries 0..100
     for (int i=0; i<101; ++i)
@@ -68,6 +101,9 @@ void MainWindow::on_gainTestButton_clicked()
     ui->posPlot->graph(0)->setData(x, y);
     ui->posPlot->graph(1)->setData(y, x);
     ui->posPlot->replot();
+
+    gainsHaveBeenChanged = true;
+
 }
 
 void MainWindow::resetYLabel()
@@ -77,9 +113,15 @@ void MainWindow::resetYLabel()
 }
 
 
-void MainWindow::on_partList_currentIndexChanged(int partIndex)
+void MainWindow::on_partList_currentIndexChanged(int partId)
 {
+    if(gainsHaveBeenChanged)
+    {
+        QMessageBox::warning(this, "test", "test", QMessageBox::Save, QMessageBox::Discard);
+    }
     ui->jointList->clear();
+    jointIndex = 0;
+    partIndex = partId;
     switch(partIndex)
     {
         case 0:
@@ -161,26 +203,7 @@ void MainWindow::on_partList_currentIndexChanged(int partIndex)
     }
 }
 
-void MainWindow::on_posContButton_clicked()
-{
-    controlType = "position";
-    yPlotLabel = "q (deg)";
-    resetYLabel();
-}
 
-void MainWindow::on_velContButton_clicked()
-{
-    controlType = "velocity";
-    yPlotLabel = "dq (deg/sec)";
-    resetYLabel();
-}
-
-void MainWindow::on_torContButton_clicked()
-{
-    controlType = "torque";
-    yPlotLabel = "tau (Nm)";
-    resetYLabel();
-}
 
 
 
@@ -192,5 +215,101 @@ void MainWindow::on_closeButton_clicked()
 
 void MainWindow::on_homeButton_clicked()
 {
-    //fooObject->bar();
+    //tell thread to go to home
+}
+
+void MainWindow::on_previousJointButton_clicked()
+{
+    int nJoints = ui->jointList->count();
+    int numRobotParts = ui->partList->count();
+    jointIndex++;
+
+    if (jointIndex==nJoints)
+    {jointIndex = 0; partIndex++;}
+
+    if(partIndex==numRobotParts)
+    {jointIndex=0; partIndex=0;}
+
+    setCurrentPartAndJoint();
+}
+
+void MainWindow::on_nextJointButton_clicked()
+{
+    int numRobotParts = ui->partList->count();
+    jointIndex--;
+
+    if (jointIndex<0)
+    {
+        partIndex--;
+        ui->partList->setCurrentIndex(partIndex);
+        jointIndex = ui->jointList->count()-1;
+    }
+
+    if(partIndex<0)
+    {
+        jointIndex=0;
+        partIndex=numRobotParts-1;
+        ui->partList->setCurrentIndex(partIndex);
+        jointIndex = ui->jointList->count()-1;
+    }
+
+
+    setCurrentPartAndJoint();
+}
+
+
+void MainWindow::on_posContButton_toggled(bool checked)
+{
+    if (checked){
+    controlType = "position";
+    yPlotLabel = "q (deg)";
+    resetYLabel();
+    ui->velContButton->setChecked(false);
+    ui->torContButton->setChecked(false);
+    }
+}
+
+void MainWindow::on_velContButton_toggled(bool checked)
+{
+    if (checked){
+    controlType = "velocity";
+    yPlotLabel = "dq (deg/sec)";
+    resetYLabel();
+    ui->posContButton->setChecked(false);
+    ui->torContButton->setChecked(false);
+    }
+}
+
+void MainWindow::on_torContButton_toggled(bool checked)
+{
+    if (checked){
+    controlType = "torque";
+    yPlotLabel = "tau (Nm)";
+    resetYLabel();
+    ui->posContButton->setChecked(false);
+    ui->velContButton->setChecked(false);
+    }
+}
+
+
+void MainWindow::on_kp_in_editingFinished()
+{
+    qDebug()<< ui->kp_in->text();
+    ui->statusInfoLabel->setText("setting gain...");
+
+}
+
+void MainWindow::on_kd_in_editingFinished()
+{
+    qDebug()<< ui->kd_in->text();
+}
+
+void MainWindow::on_ki_in_editingFinished()
+{
+    qDebug()<< ui->ki_in->text();
+}
+
+void MainWindow::on_saveGainsButton_clicked()
+{
+
 }

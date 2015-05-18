@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-//#include "testclass.h"
+
 
 namespace Ui {
 class MainWindow;
@@ -11,33 +11,54 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-//Foo *fooObject_,
+
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-public slots:
+    void initializeGui();
+
+private slots:
     void createPlot();
     void on_gainTestButton_clicked();
     void addPartsToList();
     void on_partList_currentIndexChanged(int index);
     void on_closeButton_clicked();
 
-private slots:
-    void on_posContButton_clicked();
 
-    void on_velContButton_clicked();
-
-    void on_torContButton_clicked();
 
     void on_homeButton_clicked();
 
+    void on_nextJointButton_clicked();
+
+    void on_previousJointButton_clicked();
+
+    void on_posContButton_toggled(bool checked);
+
+    void on_velContButton_toggled(bool checked);
+
+    void on_torContButton_toggled(bool checked);
+
+    void on_kd_in_editingFinished();
+
+    void on_kp_in_editingFinished();
+
+    void on_ki_in_editingFinished();
+
+    void on_saveGainsButton_clicked();
+
 private:
     Ui::MainWindow *ui;
-    //Foo *fooObject;
-    QString controlType, yPlotLabel;
-    bool isOnlyMajorJoints;
+
+    //Functions
     void resetYLabel();
+    void setCurrentPartAndJoint();
+
+
+    //Variables
+    QString controlType, yPlotLabel;
+    bool isOnlyMajorJoints, gainsHaveBeenChanged;
+    int partIndex, jointIndex;
 };
 
 #endif // MAINWINDOW_H
