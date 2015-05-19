@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMessageBox>
 
 
 namespace Ui {
@@ -47,18 +48,39 @@ private slots:
 
     void on_saveGainsButton_clicked();
 
+    void on_gainResetButton_clicked();
+    
+
+    void on_partList_highlighted(int index);
+
+
+
+    void on_jointList_highlighted(int index);
+
 private:
     Ui::MainWindow *ui;
+
+
+
+
 
     //Functions
     void resetYLabel();
     void setCurrentPartAndJoint();
-
+    bool discardChanges();
+    void saveGains();
+    void refreshGainDisplays();
+    bool getPidGains();
+    bool setPidGains();
 
     //Variables
     QString controlType, yPlotLabel;
     bool isOnlyMajorJoints, gainsHaveBeenChanged;
     int partIndex, jointIndex;
+
+
+    double Kp_new, Kd_new, Ki_new;
+    double Kp_old, Kd_old, Ki_old;
 };
 
 #endif // MAINWINDOW_H

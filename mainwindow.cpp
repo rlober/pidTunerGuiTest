@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QMessageBox>
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     controlType = "position";
     yPlotLabel = "y";
     isOnlyMajorJoints = true;
-
+    gainsHaveBeenChanged = false;
     initializeGui();
 
 
@@ -31,6 +31,7 @@ void MainWindow::setCurrentPartAndJoint()
 
 void MainWindow::initializeGui()
 {
+
     jointIndex = 0;
     partIndex = 0;
     setCurrentPartAndJoint();
@@ -44,11 +45,10 @@ void MainWindow::initializeGui()
     jointIndex = ui->jointList->count()-1;
     setCurrentPartAndJoint();
 
-    gainsHaveBeenChanged = false;
     ui->posContButton->setChecked(true);
     ui->statusInfoLabel->setText("ready");
 
-
+    getPidGains();
 }
 
 
@@ -115,10 +115,6 @@ void MainWindow::resetYLabel()
 
 void MainWindow::on_partList_currentIndexChanged(int partId)
 {
-    if(gainsHaveBeenChanged)
-    {
-        QMessageBox::warning(this, "test", "test", QMessageBox::Save, QMessageBox::Discard);
-    }
     ui->jointList->clear();
     jointIndex = 0;
     partIndex = partId;
@@ -220,96 +216,269 @@ void MainWindow::on_homeButton_clicked()
 
 void MainWindow::on_previousJointButton_clicked()
 {
-    int nJoints = ui->jointList->count();
-    int numRobotParts = ui->partList->count();
-    jointIndex++;
+    if(discardChanges())
+    {
+        int nJoints = ui->jointList->count();
+        int numRobotParts = ui->partList->count();
+        jointIndex++;
 
-    if (jointIndex==nJoints)
-    {jointIndex = 0; partIndex++;}
+        if (jointIndex==nJoints)
+        {jointIndex = 0; partIndex++;}
 
-    if(partIndex==numRobotParts)
-    {jointIndex=0; partIndex=0;}
+        if(partIndex==numRobotParts)
+        {jointIndex=0; partIndex=0;}
 
-    setCurrentPartAndJoint();
+        setCurrentPartAndJoint();
+
+    }
 }
 
 void MainWindow::on_nextJointButton_clicked()
 {
-    int numRobotParts = ui->partList->count();
-    jointIndex--;
-
-    if (jointIndex<0)
+    if(discardChanges())
     {
-        partIndex--;
-        ui->partList->setCurrentIndex(partIndex);
-        jointIndex = ui->jointList->count()-1;
+        int numRobotParts = ui->partList->count();
+        jointIndex--;
+
+        if (jointIndex<0)
+        {
+            partIndex--;
+            ui->partList->setCurrentIndex(partIndex);
+            jointIndex = ui->jointList->count()-1;
+        }
+
+        if(partIndex<0)
+        {
+            jointIndex=0;
+            partIndex=numRobotParts-1;
+            ui->partList->setCurrentIndex(partIndex);
+            jointIndex = ui->jointList->count()-1;
+        }
+
+
+        setCurrentPartAndJoint();
     }
-
-    if(partIndex<0)
-    {
-        jointIndex=0;
-        partIndex=numRobotParts-1;
-        ui->partList->setCurrentIndex(partIndex);
-        jointIndex = ui->jointList->count()-1;
-    }
-
-
-    setCurrentPartAndJoint();
 }
 
 
 void MainWindow::on_posContButton_toggled(bool checked)
 {
-    if (checked){
-    controlType = "position";
-    yPlotLabel = "q (deg)";
-    resetYLabel();
-    ui->velContButton->setChecked(false);
-    ui->torContButton->setChecked(false);
+    if(discardChanges()){
+        if (checked){
+            controlType = "position";
+            yPlotLabel = "q (deg)";
+            resetYLabel();
+            ui->velContButton->setChecked(false);
+            ui->torContButton->setChecked(false);
+        }
     }
 }
 
 void MainWindow::on_velContButton_toggled(bool checked)
 {
-    if (checked){
-    controlType = "velocity";
-    yPlotLabel = "dq (deg/sec)";
-    resetYLabel();
-    ui->posContButton->setChecked(false);
-    ui->torContButton->setChecked(false);
+    if(discardChanges()){
+        if (checked){
+            controlType = "velocity";
+            yPlotLabel = "dq (deg/sec)";
+            resetYLabel();
+            ui->posContButton->setChecked(false);
+            ui->torContButton->setChecked(false);
+        }
+    }
+    else{
+        ui->velContButton->setChecked(false);
     }
 }
 
 void MainWindow::on_torContButton_toggled(bool checked)
 {
-    if (checked){
-    controlType = "torque";
-    yPlotLabel = "tau (Nm)";
-    resetYLabel();
-    ui->posContButton->setChecked(false);
-    ui->velContButton->setChecked(false);
+    if(discardChanges()){
+        if (checked){
+            controlType = "torque";
+            yPlotLabel = "tau (Nm)";
+            resetYLabel();
+            ui->posContButton->setChecked(false);
+            ui->velContButton->setChecked(false);
+        }
     }
 }
 
 
 void MainWindow::on_kp_in_editingFinished()
 {
-    qDebug()<< ui->kp_in->text();
-    ui->statusInfoLabel->setText("setting gain...");
+    bool ok;
+    Ki_new = ui->kp_in->text().toDouble(&ok);
+    if(ok){
+        ui->statusInfoLabel->setText("setting gain...");
+        ui->kp_in->setStyleSheet("QLineEdit { background: rgb(255, 255, 0)}"); //yellow
+
+        if(true){
+            //Check that rpc port gets a response
+            //implement
+
+            ui->statusInfoLabel->setText("ready");
+            ui->kp_in->setStyleSheet("QLineEdit { background: rgb(255, 255, 255)}"); //white
+            refreshGainDisplays();
+        }
+    }
+    else if(!ok){
+        ui->kp_in->setStyleSheet("QLineEdit { background: rgb(255, 0, 0)}");
+        int ret = QMessageBox::warning(this, tr("Warning"),
+                                       tr("The gains must be a number. Try again dummy."),
+                                       QMessageBox::Ok);
+        if(!ui->kp_in->hasFocus())
+            ui->kp_in->setFocus();
+
+        ui->kp_in->selectAll();
+
+    }
+
 
 }
 
 void MainWindow::on_kd_in_editingFinished()
 {
-    qDebug()<< ui->kd_in->text();
+    bool ok;
+    Kd_new = ui->kd_in->text().toDouble(&ok);
+    if(ok){
+        ui->statusInfoLabel->setText("setting gain...");
+        ui->kd_in->setStyleSheet("QLineEdit { background: rgb(255, 255, 0)}"); //yellow
+
+        if(true){
+            //Check that rpc port gets a response
+            //implement
+
+            ui->statusInfoLabel->setText("ready");
+            ui->kd_in->setStyleSheet("QLineEdit { background: rgb(255, 255, 255)}"); //white
+            refreshGainDisplays();
+        }
+    }
+    else if(!ok){
+        ui->kd_in->setStyleSheet("QLineEdit { background: rgb(255, 0, 0)}");
+        int ret = QMessageBox::warning(this, tr("Warning"),
+                                       tr("The gains must be a number. Try again dummy."),
+                                       QMessageBox::Ok);
+        if(!ui->kd_in->hasFocus())
+            ui->kd_in->setFocus();
+
+        ui->kd_in->selectAll();
+
+    }
 }
 
 void MainWindow::on_ki_in_editingFinished()
 {
-    qDebug()<< ui->ki_in->text();
+    bool ok;
+    Ki_new = ui->ki_in->text().toDouble(&ok);
+    if(ok){
+        ui->statusInfoLabel->setText("setting gain...");
+        ui->ki_in->setStyleSheet("QLineEdit { background: rgb(255, 255, 0)}"); //yellow
+
+        if(true){
+            //Check that rpc port gets a response
+            //implement
+
+            ui->statusInfoLabel->setText("ready");
+            ui->ki_in->setStyleSheet("QLineEdit { background: rgb(255, 255, 255)}"); //white
+            refreshGainDisplays();
+        }
+    }
+    else if(!ok){
+        ui->ki_in->setStyleSheet("QLineEdit { background: rgb(255, 0, 0)}");
+        int ret = QMessageBox::warning(this, tr("Warning"),
+                                       tr("The gains must be a number. Try again dummy."),
+                                       QMessageBox::Ok);
+        if(!ui->ki_in->hasFocus())
+            ui->ki_in->setFocus();
+
+        ui->ki_in->selectAll();
+
+    }
 }
 
 void MainWindow::on_saveGainsButton_clicked()
 {
+    saveGains();
+}
 
+
+void MainWindow::on_gainResetButton_clicked()
+{
+    Kp_new = Kp_old; Kd_new = Kd_old; Ki_new = Ki_old;
+    refreshGainDisplays();
+}
+
+void MainWindow::refreshGainDisplays()
+{
+    ui->kp_in->setText(QString::number(Kp_new));
+    ui->kd_in->setText(QString::number(Kd_new));
+    ui->ki_in->setText(QString::number(Ki_new));
+}
+
+
+bool MainWindow::discardChanges()
+{
+    if(gainsHaveBeenChanged)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("The gains for "+ui->partList->currentText()+" ("+ui->jointList->currentText()+") has been modified.");
+        msgBox.setInformativeText("Do you want to save your changes?");
+        msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        msgBox.setDefaultButton(QMessageBox::Save);
+        int ret = msgBox.exec();
+
+        switch (ret) {
+          case QMessageBox::Save:
+              qDebug()<<"save dat shit";
+              saveGains();
+              return false;
+              break;
+          case QMessageBox::Discard:
+              qDebug()<<"discard dat shit";
+              gainsHaveBeenChanged=false;
+              return true;
+              break;
+          case QMessageBox::Cancel:
+              qDebug()<<"cancel dat shit";
+              return false;
+              break;
+          default:
+              qDebug()<<"what da fuck";
+              return false;
+              break;
+        }
+    }
+    else{return true;}
+
+}
+
+void MainWindow::saveGains()
+{
+    qDebug()<<"saved";
+    gainsHaveBeenChanged=false;
+}
+
+void MainWindow::on_partList_highlighted(int index)
+{
+    if(discardChanges())
+        qDebug()<<"highlighted";
+}
+
+
+
+void MainWindow::on_jointList_highlighted(int index)
+{
+    if(discardChanges())
+        qDebug()<<"highlighted";
+}
+
+
+bool getPidGains()
+{
+
+}
+
+bool setPidGains()
+{
+    getPidGains();
 }
