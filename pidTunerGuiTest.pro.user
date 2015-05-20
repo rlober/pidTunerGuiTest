@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 3.3.1, 2015-05-18T13:29:46. -->
+<!-- Written by QtCreator 3.3.1, 2015-05-20T13:18:03. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -234,7 +234,7 @@
      <value type="int">13</value>
      <value type="int">14</value>
     </valuelist>
-    <value type="int" key="PE.EnvironmentAspect.Base">-1</value>
+    <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">pidTunerGuiTest</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>

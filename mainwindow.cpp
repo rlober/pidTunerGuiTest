@@ -473,12 +473,13 @@ void MainWindow::on_jointList_highlighted(int index)
 }
 
 
-bool getPidGains()
+bool MainWindow::getPidGains()
 {
-
+    return true;
 }
 
-bool setPidGains()
+bool MainWindow::setPidGains()
 {
     getPidGains();
+    return true;
 }
