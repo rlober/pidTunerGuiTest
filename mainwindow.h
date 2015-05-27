@@ -57,6 +57,16 @@ private slots:
 
     void on_jointList_highlighted(int index);
 
+    void on_amplitude_in_editingFinished();
+
+    void on_duration_in_editingFinished();
+
+    void on_startTime_in_editingFinished();
+
+    void on_resetSignalPropButton_clicked();
+
+    void on_savePlotButton_clicked();
+
 private:
     Ui::MainWindow *ui;
 

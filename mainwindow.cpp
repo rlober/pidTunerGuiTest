@@ -307,7 +307,7 @@ void MainWindow::on_torContButton_toggled(bool checked)
 void MainWindow::on_kp_in_editingFinished()
 {
     bool ok;
-    Ki_new = ui->kp_in->text().toDouble(&ok);
+    Kp_new = ui->kp_in->text().toDouble(&ok);
     if(ok){
         ui->statusInfoLabel->setText("setting gain...");
         ui->kp_in->setStyleSheet("QLineEdit { background: rgb(255, 255, 0)}"); //yellow
@@ -482,4 +482,29 @@ bool MainWindow::setPidGains()
 {
     getPidGains();
     return true;
+}
+
+void MainWindow::on_amplitude_in_editingFinished()
+{
+
+}
+
+void MainWindow::on_duration_in_editingFinished()
+{
+
+}
+
+void MainWindow::on_startTime_in_editingFinished()
+{
+
+}
+
+void MainWindow::on_resetSignalPropButton_clicked()
+{
+
+}
+
+void MainWindow::on_savePlotButton_clicked()
+{
+
 }
